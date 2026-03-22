@@ -1,6 +1,6 @@
 # AIDEN - AI Documentation Assistant for AcreetionOS
 
-AIDEN (AI Documentation Engine for AcreetionOS) is a web-based AI assistant that answers questions about AcreetionOS using Retrieval-Augmented Generation (RAG). It provides an intuitive chat interface for users to query documentation with source citations.
+**AIDEN** (AcreetionOS Intelligent Digital Enhancement Node) - also known as **Aiden** - is a web-based AI assistant that answers questions about AcreetionOS using Retrieval-Augmented Generation (RAG). It provides an intuitive chat interface for users to query documentation with source citations.
 
 ## Features
 
@@ -159,4 +159,5 @@ MIT License. See [LICENSE](LICENSE).
 
 - **GitLab**: https://gitlab.acreetionos.org/natalie/aiden
 - **GitHub**: https://github.com/AcreetionOS-Code/aiden
-- **Live Instance**: https://aiden.acreetionos.org
+- **Live Instance**: https://docs.acreetionos.org (AIDEN - AcreetionOS AI Assistant)
+- **Alt Domain**: https://aiden.acreetionos.org
