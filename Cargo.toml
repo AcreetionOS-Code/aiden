@@ -1,0 +1,35 @@
+[package]
+name = "aiden"
+version = "0.1.0"
+edition = "2021"
+authors = ["Natalie Spiva <natalie@acreetionos.org>"]
+description = "AIDEN - AI Documentation Assistant for AcreetionOS"
+license = "MIT"
+homepage = "https://gitlab.acreetionos.org/natalie/aiden"
+repository = "https://gitlab.acreetionos.org/natalie/aiden"
+
+[dependencies]
+axum = { version = "0.7", features = ["ws"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace", "fs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.11", features = ["json", "stream"] }
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+futures = "0.3"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+walkdir = "2"
+qdrant-client = "1.7"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

@@ -1,0 +1,14 @@
+CODEOWNERS
+
+# Default owner
+* @spivanatalie64
+
+# Documentation
+/docs/ @spivanatalie64
+
+# CI/CD
+/.github/ @spivanatalie64
+
+# Docker
+Dockerfile @spivanatalie64
+docker-compose.yml @spivanatalie64

@@ -1,0 +1,14 @@
+target/
+Cargo.lock
+.git/
+.gitignore
+.env
+*.log
+pids/
+*.pid
+.DS_Store
+*.swp
+*.swo
+.cache/
+.vscode/
+.idea/

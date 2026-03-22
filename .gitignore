@@ -1,0 +1,57 @@
+# Rust build artifacts
+/target/
+**/target/
+Cargo.lock
+*.rs.bk
+
+# IDE
+.idea/
+.vscode/
+.vscode-oss/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+**/*.o
+**/*.a
+**/*.so
+**/*.dylib
+*.pdb
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# User documentation (keep markdown docs)
+/docs/*.md
+!/docs/README.md
+!/docs/architecture.md
+!/docs/api-reference.md
+!/docs/configuration.md
+!/docs/troubleshooting.md
+!/docs/DEPLOYMENT.md
+
+# Ollama (local model cache)
+/root/.ollama/
+~/.ollama/
+
+# Qdrant storage
+qdrant_data/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

@@ -1,0 +1,18 @@
+[Unit]
+Description=AIDEN - AcreetionOS AI Documentation Assistant
+After=network.target ollama.service qdrant.service
+Wants=ollama.service qdrant.service
+
+[Service]
+Type=simple
+User=natalie
+WorkingDirectory=/opt/aiden
+ExecStart=/opt/aiden/aiden
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment="RUST_LOG=info"
+
+[Install]
+WantedBy=multi-user.target
