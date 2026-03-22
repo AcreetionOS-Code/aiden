@@ -40,7 +40,7 @@ impl Default for Config {
         Self {
             ollama: OllamaConfig {
                 host: "localhost:11434".to_string(),
-                chat_model: "llama3.2:1b".to_string(),
+                chat_model: "llama3.1:8b".to_string(),
                 embed_model: "nomic-embed-text".to_string(),
             },
             search: SearchConfig {

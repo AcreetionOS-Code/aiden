@@ -35,14 +35,9 @@ pids/
 *.seed
 *.pid.lock
 
-# User documentation (keep markdown docs)
+# User documentation (all markdown docs)
 /docs/*.md
 !/docs/README.md
-!/docs/architecture.md
-!/docs/api-reference.md
-!/docs/configuration.md
-!/docs/troubleshooting.md
-!/docs/DEPLOYMENT.md
 
 # Ollama (local model cache)
 /root/.ollama/
