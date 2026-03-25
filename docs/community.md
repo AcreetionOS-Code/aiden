@@ -200,9 +200,8 @@ We are committed to providing a welcoming community.
 
 ### Official Links
 
-- **GitLab**: https://gitlab.acreetionos.org/natalie/aiden
 - **GitHub**: https://github.com/AcreetionOS-Code/aiden
-- **Live Instance**: https://aiden.acreetionos.org
+- **Live Instance**: https://docs.acreetionos.org
 
 ### Related Projects
 

@@ -1,15 +1,15 @@
 use axum::{
-    extract::{State, WebSocketUpgrade, Json, ws},
-    response::{Html, IntoResponse},
+    extract::{ws, Json, State, WebSocketUpgrade},
     http::StatusCode,
+    response::{Html, IntoResponse},
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+use crate::services::{IndexerService, OllamaService, QdrantService, RAGService};
 use crate::state::{AppState, ChatMessage};
-use crate::services::{OllamaService, QdrantService, RAGService, IndexerService};
-use futures::{StreamExt, SinkExt};
+use futures::{SinkExt, StreamExt};
 
 #[derive(Clone)]
 pub struct AppStateRef {
@@ -54,12 +54,12 @@ pub async fn chat(
         let state = state.inner.read().await;
         state.config.clone()
     };
-    
+
     let ollama = OllamaService::new(&config.ollama.host);
     let qdrant = QdrantService::new(&config.indexing.collection_name)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     let rag = RAGService::new(
         ollama,
         qdrant,
@@ -68,14 +68,12 @@ pub async fn chat(
         config.search.threshold,
         config.search.max_results,
     );
-    
-    let response = rag.query(&req.message)
-        .await
-        .map_err(|e| {
-            tracing::error!("RAG query failed: {}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-    
+
+    let response = rag.query(&req.message).await.map_err(|e| {
+        tracing::error!("RAG query failed: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
     Ok(Json(ChatResponse { response }))
 }
 
@@ -89,7 +87,7 @@ pub async fn chat_stream(
             let state = state.inner.read().await;
             state.config.clone()
         };
-        
+
         let ollama = OllamaService::new(&config.ollama.host);
         let qdrant = match QdrantService::new(&config.indexing.collection_name).await {
             Ok(q) => q,
@@ -98,7 +96,7 @@ pub async fn chat_stream(
                 return;
             }
         };
-        
+
         let rag = RAGService::new(
             ollama,
             qdrant,
@@ -107,11 +105,15 @@ pub async fn chat_stream(
             config.search.threshold,
             config.search.max_results,
         );
-        
+
         let (mut sink, _stream) = socket.split();
-        
-        let _ = sink.send(ws::Message::Text("{\"type\":\"status\",\"content\":\"Thinking...\"}".into())).await;
-        
+
+        let _ = sink
+            .send(ws::Message::Text(
+                "{\"type\":\"status\",\"content\":\"Thinking...\"}".into(),
+            ))
+            .await;
+
         match rag.query(&req.message).await {
             Ok(response) => {
                 if !response.sources.is_empty() {
@@ -119,23 +121,38 @@ pub async fn chat_stream(
                         "type": "sources",
                         "sources": response.sources
                     });
-                    let _ = sink.send(ws::Message::Text(serde_json::to_string(&sources_json).unwrap())).await;
+                    let _ = sink
+                        .send(ws::Message::Text(
+                            serde_json::to_string(&sources_json).unwrap(),
+                        ))
+                        .await;
                 }
-                
-                let _ = sink.send(ws::Message::Text(serde_json::json!({
-                    "type": "response",
-                    "content": response.content,
-                    "id": response.id,
-                    "used_web_fallback": response.used_web_fallback
-                }).to_string())).await;
+
+                let _ = sink
+                    .send(ws::Message::Text(
+                        serde_json::json!({
+                            "type": "response",
+                            "content": response.content,
+                            "id": response.id,
+                            "used_web_fallback": response.used_web_fallback
+                        })
+                        .to_string(),
+                    ))
+                    .await;
             }
             Err(e) => {
                 tracing::error!("RAG query failed: {}", e);
-                let _ = sink.send(ws::Message::Text("{\"type\":\"error\",\"content\":\"Failed to process query\"}".into())).await;
+                let _ = sink
+                    .send(ws::Message::Text(
+                        "{\"type\":\"error\",\"content\":\"Failed to process query\"}".into(),
+                    ))
+                    .await;
             }
         }
-        
-        let _ = sink.send(ws::Message::Text("{\"type\":\"done\"}".into())).await;
+
+        let _ = sink
+            .send(ws::Message::Text("{\"type\":\"done\"}".into()))
+            .await;
     })
 }
 
@@ -150,12 +167,12 @@ pub async fn index_docs(
         });
         s.config.clone()
     };
-    
+
     let ollama = OllamaService::new(&config.ollama.host);
     let qdrant = QdrantService::new(&config.indexing.collection_name)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     let indexer = IndexerService::new(
         ollama,
         qdrant,
@@ -163,7 +180,7 @@ pub async fn index_docs(
         config.indexing.chunk_size,
         config.ollama.embed_model,
     );
-    
+
     tokio::spawn(async move {
         match indexer.index_all().await {
             Ok(stats) => {
@@ -176,8 +193,11 @@ pub async fn index_docs(
                     current_file: "Complete".to_string(),
                     errors: stats.errors,
                 });
-                tracing::info!("Indexing complete: {} files, {} chunks", 
-                    stats.files_processed, stats.chunks_created);
+                tracing::info!(
+                    "Indexing complete: {} files, {} chunks",
+                    stats.files_processed,
+                    stats.chunks_created
+                );
             }
             Err(e) => {
                 let mut state = state.inner.write().await;
@@ -190,18 +210,16 @@ pub async fn index_docs(
             }
         }
     });
-    
+
     Ok(Json(serde_json::json!({
         "status": "started",
         "message": "Indexing started in background"
     })))
 }
 
-pub async fn index_status(
-    State(state): State<AppStateRef>,
-) -> Json<IndexStatusResponse> {
+pub async fn index_status(State(state): State<AppStateRef>) -> Json<IndexStatusResponse> {
     let status = state.inner.read().await.indexing_status.clone();
-    
+
     match status {
         Some(s) => Json(IndexStatusResponse {
             is_indexing: s.is_indexing,
@@ -218,21 +236,23 @@ pub async fn index_status(
     }
 }
 
-pub async fn health(
-    State(state): State<AppStateRef>,
-) -> Json<HealthResponse> {
+pub async fn health(State(state): State<AppStateRef>) -> Json<HealthResponse> {
     let config = state.inner.read().await.config.clone();
-    
+
     let ollama = OllamaService::new(&config.ollama.host);
     let ollama_ok = ollama.health_check().await.unwrap_or(false);
-    
+
     let qdrant_ok = QdrantService::new(&config.indexing.collection_name)
         .await
         .map(|_| true)
         .unwrap_or(false);
-    
+
     Json(HealthResponse {
-        status: if ollama_ok && qdrant_ok { "healthy".to_string() } else { "degraded".to_string() },
+        status: if ollama_ok && qdrant_ok {
+            "healthy".to_string()
+        } else {
+            "degraded".to_string()
+        },
         ollama: ollama_ok,
         qdrant: qdrant_ok,
     })

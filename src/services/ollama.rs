@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
@@ -30,15 +30,16 @@ impl OllamaService {
             .timeout(Duration::from_secs(300))
             .build()
             .unwrap();
-        
+
         Self {
             client,
             base_url: format!("http://{}", host),
         }
     }
-    
+
     pub async fn chat(&self, model: &str, messages: &[OllamaMessage]) -> Result<String> {
-        let response = self.client
+        let response = self
+            .client
             .post(format!("{}/api/chat", self.base_url))
             .json(&serde_json::json!({
                 "model": model,
@@ -47,13 +48,14 @@ impl OllamaService {
             }))
             .send()
             .await?;
-        
+
         let response: ChatResponse = response.json().await?;
         Ok(response.message.content)
     }
-    
+
     pub async fn embeddings(&self, model: &str, text: &str) -> Result<Vec<f32>> {
-        let response = self.client
+        let response = self
+            .client
             .post(format!("{}/api/embeddings", self.base_url))
             .json(&serde_json::json!({
                 "model": model,
@@ -61,13 +63,14 @@ impl OllamaService {
             }))
             .send()
             .await?;
-        
+
         let response: EmbedResponse = response.json().await?;
         Ok(response.embedding)
     }
-    
+
     pub async fn health_check(&self) -> Result<bool> {
-        match self.client
+        match self
+            .client
             .get(format!("{}/", self.base_url))
             .timeout(Duration::from_secs(5))
             .send()
