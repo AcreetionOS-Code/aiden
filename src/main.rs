@@ -3,11 +3,14 @@ mod services;
 mod state;
 
 use anyhow::Result;
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use axum::{Router, routing::{get, post}};
 
 use state::AppState;
 
@@ -41,7 +44,7 @@ async fn main() -> Result<()> {
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8081").await?;
     tracing::info!("AIDEN listening on http://0.0.0.0:8081");
-    
+
     axum::serve(listener, app).await?;
 
     Ok(())

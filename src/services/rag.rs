@@ -1,6 +1,6 @@
+use crate::services::{OllamaMessage, OllamaService, QdrantService};
+use crate::state::{ChatMessage, Source, SourceType};
 use anyhow::Result;
-use crate::state::{Source, SourceType, ChatMessage};
-use crate::services::{OllamaService, QdrantService, OllamaMessage};
 use std::fmt;
 
 #[derive(Clone)]
@@ -42,22 +42,21 @@ impl RAGService {
             max_results,
         }
     }
-    
+
     pub async fn query(&self, question: &str) -> Result<ChatMessage> {
-        let query_embedding = self.ollama
-            .embeddings(&self.embed_model, question)
-            .await?;
-        
-        let local_hits = self.qdrant
+        let query_embedding = self.ollama.embeddings(&self.embed_model, question).await?;
+
+        let local_hits = self
+            .qdrant
             .search(&query_embedding, self.max_results)
             .await?;
-        
+
         let top_score = local_hits.first().map(|h| h.score).unwrap_or(0.0);
         let needs_web = top_score < self.threshold;
-        
+
         let mut all_sources = Vec::new();
         let mut context_parts = Vec::new();
-        
+
         for (i, hit) in local_hits.iter().enumerate() {
             if hit.score >= 0.3 {
                 context_parts.push(format!("[{}] {}", i + 1, hit.text));
@@ -70,14 +69,14 @@ impl RAGService {
                 });
             }
         }
-        
+
         let context = context_parts.join("\n\n");
-        
+
         let system_prompt = format!(
             "You are AIDEN, a helpful assistant for AcreetionOS, a user-friendly Arch-based Linux distribution. Use the following context to answer the user's question. If the context doesn't contain the answer, say so based on your knowledge of AcreetionOS. Be helpful, concise, and friendly.\n\nContext:\n{}",
             context
         );
-        
+
         let messages = vec![
             OllamaMessage {
                 role: "system".to_string(),
@@ -88,9 +87,9 @@ impl RAGService {
                 content: question.to_string(),
             },
         ];
-        
+
         let response = self.ollama.chat(&self.chat_model, &messages).await?;
-        
+
         Ok(ChatMessage::assistant(
             response,
             all_sources,
